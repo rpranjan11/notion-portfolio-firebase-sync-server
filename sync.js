@@ -6,7 +6,7 @@ const fs = require("fs");
 
 // Initialize Firebase Admin
 admin.initializeApp({
-  credential: admin.credential.cert(require("./serviceAccountKey.json")),
+  credential: admin.credential.cert(require("./theranjana-portfolio-firebase-adminsdk-fbsvc-e46e9045f5.json")),
   databaseURL: process.env.FIREBASE_DB_URL
 });
 
