@@ -258,22 +258,118 @@ async function updateNotion(data) {
   }
 
   if (data.experiences) {
-    blocks.push(createHeading("📌 Experiences", 2));
-    Object.values(data.experiences).forEach(exp => {
-      if (!exp.isDeleted) {
-        const children = [
-          createParagraph(exp.achievements || "")
-        ];
-        blocks.push(createToggle(`💼 ${exp.designation} @ ${exp.employer} (${exp.period})`, children));
+    blocks.push(createHeading("📌 Experience", 2));
+    blocks.push({ object: "block", type: "divider", divider: {} });
+
+    for (const exp of Object.values(data.experiences)) {
+      if (exp.isDeleted) continue;
+
+      const leftColumnChildren = [
+        {
+          object: "block",
+          type: "paragraph",
+          paragraph: {
+            rich_text: [
+              {
+                type: "text",
+                text: { content: `${exp.designation} @ ${exp.employer}` },
+                annotations: { bold: true }
+              }
+            ]
+          }
+        },
+        {
+          object: "block",
+          type: "paragraph",
+          paragraph: {
+            rich_text: [{ type: "text", text: { content: exp.period, link: null }, annotations: { italic: true } }]
+          }
+        }
+      ];
+
+      const rightColumnChildren = [];
+
+      if (exp.achievements) {
+        exp.achievements.split("\n").forEach(line => {
+          const trimmed = line.trim();
+          if (trimmed) {
+            rightColumnChildren.push({
+              object: "block",
+              type: "bulleted_list_item",
+              bulleted_list_item: {
+                rich_text: [createText(trimmed.replace(/^➣/, "➤"))]
+              }
+            });
+          }
+        });
       }
-    });
+
+      blocks.push({
+        object: "block",
+        type: "column_list",
+        column_list: {
+          children: [
+            {
+              type: "column",
+              column: { children: leftColumnChildren }
+            },
+            {
+              type: "column",
+              column: { children: rightColumnChildren }
+            }
+          ]
+        }
+      });
+
+      blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
+    }
   }
 
   if (data.education) {
     blocks.push(createHeading("🎓 Education", 2));
-    blocks.push(createBullet([createText(data.education.school)]));
-    blocks.push(createBullet([createText(data.education.duration)]));
-    data.education.majors.forEach(major => blocks.push(createBullet([createText(major)])));
+    blocks.push({ object: "block", type: "divider", divider: {} });
+
+    const leftCol = [
+      {
+        object: "block",
+        type: "paragraph",
+        paragraph: {
+          rich_text: [
+            {
+              type: "text",
+              text: { content: data.education.school },
+              annotations: { bold: true }
+            }
+          ]
+        }
+      },
+      {
+        object: "block",
+        type: "paragraph",
+        paragraph: {
+          rich_text: [{ type: "text", text: { content: data.education.duration, link: null }, annotations: { italic: true } }]
+        }
+      }
+    ];
+
+    const rightCol = data.education.majors.map(subject => ({
+      object: "block",
+      type: "bulleted_list_item",
+      bulleted_list_item: {
+        rich_text: [createText(subject)]
+      }
+    }));
+
+    blocks.push({
+      object: "block",
+      type: "column_list",
+      column_list: {
+        children: [
+          { type: "column", column: { children: leftCol } },
+          { type: "column", column: { children: rightCol } }
+        ]
+      }
+    });
   }
 
   const existing = await notion.blocks.children.list({ block_id: PAGE_ID });
