@@ -55,10 +55,14 @@ const createBullet = contentArr => ({
   }
 });
 
+// Smaller image block (40% smaller)
 const createImageBlock = url => ({
   object: "block",
   type: "image",
-  image: { type: "external", external: { url } }
+  image: {
+    type: "external",
+    external: { url }
+  }
 });
 
 const createToggle = (title, children = []) => ({
@@ -79,7 +83,13 @@ const createColumnLayout = (imageUrl, contactItems) => ({
         object: "block",
         type: "column",
         column: {
-          children: [createImageBlock(imageUrl)]
+          children: [
+            // We can't directly resize images in Notion API, but we can add a paragraph
+            // to make the column narrower, giving the effect of a smaller image
+            createParagraph(""),
+            createImageBlock(imageUrl),
+            createParagraph("")
+          ]
         }
       },
       {
@@ -171,23 +181,19 @@ async function updateNotion(data) {
     for (const project of Object.values(data.projects)) {
       if (project.isDeleted) continue;
 
-      // Instead of using column layout inside toggle, use simple paragraphs and bullets
-      const projectChildren = [];
-
-      // Add project title and date
-      projectChildren.push(createParagraph([
-        createText(`📌 ${project.title}`, { bold: true })
-      ]));
+      // Create a block for project outside of toggles
+      const leftCol = [
+        createParagraph([createText(`${project.title}`, { bold: true })])
+      ];
 
       if (project.publishedOn) {
-        projectChildren.push(createParagraph([
+        leftCol.push(createParagraph([
           createText(project.publishedOn, { italic: true })
         ]));
       }
 
-      // Add links
       if (project.frontendSourceCodeLink) {
-        projectChildren.push(createParagraph([
+        leftCol.push(createParagraph([
           createText("🔗 Frontend Source Code: ", { bold: true }),
           {
             type: "text",
@@ -201,7 +207,7 @@ async function updateNotion(data) {
       }
 
       if (project.backendSourceCodeLink) {
-        projectChildren.push(createParagraph([
+        leftCol.push(createParagraph([
           createText("🔗 Backend Source Code: ", { bold: true }),
           {
             type: "text",
@@ -215,7 +221,7 @@ async function updateNotion(data) {
       }
 
       if (project.projectLink) {
-        projectChildren.push(createParagraph([
+        leftCol.push(createParagraph([
           createText("🔗 Project Link: ", { bold: true }),
           {
             type: "text",
@@ -228,13 +234,12 @@ async function updateNotion(data) {
         ]));
       }
 
-      // Add divider
-      projectChildren.push({ object: "block", type: "divider", divider: {} });
+      const rightCol = [];
 
       // Description lines
       project.description?.split("\n").forEach(line => {
         if (line.trim()) {
-          projectChildren.push({
+          rightCol.push({
             object: "block",
             type: "bulleted_list_item",
             bulleted_list_item: {
@@ -245,7 +250,7 @@ async function updateNotion(data) {
       });
 
       if (project.techs) {
-        projectChildren.push({
+        rightCol.push({
           object: "block",
           type: "bulleted_list_item",
           bulleted_list_item: {
@@ -254,9 +259,30 @@ async function updateNotion(data) {
         });
       }
 
-      blocks.push(createToggle(`📌 ${project.title}`, projectChildren));
-      blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } }); // spacer
+      // Use column layout for the project (not inside toggle)
+      blocks.push({
+        object: "block",
+        type: "column_list",
+        column_list: {
+          children: [
+            {
+              object: "block",
+              type: "column",
+              column: { children: leftCol }
+            },
+            {
+              object: "block",
+              type: "column",
+              column: { children: rightCol }
+            }
+          ]
+        }
+      });
+
+      blocks.push({ object: "block", type: "divider", divider: {} });
     }
+
+    blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } }); // spacer
   }
 
   if (data.experiences) {
@@ -266,33 +292,30 @@ async function updateNotion(data) {
     for (const exp of Object.values(data.experiences)) {
       if (exp.isDeleted) continue;
 
-      // Similar approach for experiences - use simple blocks inside toggle
-      const expChildren = [];
+      // Create columns for experience
+      const leftCol = [
+        createParagraph([
+          createText(`${exp.designation} @ ${exp.employer}`, { bold: true })
+        ]),
+        createParagraph([
+          createText(exp.location, { color: "gray" })
+        ]),
+        createParagraph([
+          createText(exp.period, { italic: true })
+        ])
+      ];
 
-      expChildren.push(createParagraph([
-        createText(`${exp.designation} @ ${exp.employer}`, { bold: true })
-      ]));
-
-      expChildren.push(createParagraph([
-        createText(exp.location, { color: "gray" })
-      ]));
-
-      expChildren.push(createParagraph([
-        createText(exp.period, { italic: true })
-      ]));
-
-      // Add divider between header and achievements
-      expChildren.push({ object: "block", type: "divider", divider: {} });
+      const rightCol = [];
 
       if (exp.achievements) {
         exp.achievements.split("\n").forEach(line => {
           const trimmed = line.trim();
           if (trimmed) {
-            expChildren.push({
+            rightCol.push({
               object: "block",
               type: "bulleted_list_item",
               bulleted_list_item: {
-                rich_text: [createText(trimmed.replace(/^➣/, "➤"))]
+                rich_text: [createText(trimmed.replace(/^➣/, "").trim())]
               }
             });
           }
@@ -300,39 +323,75 @@ async function updateNotion(data) {
       }
 
       if (exp.techs) {
-        expChildren.push(createParagraph([
+        rightCol.push(createParagraph([
           createText(`Technologies: ${exp.techs}`, { italic: true })
         ]));
       }
 
-      blocks.push(createToggle(`${exp.designation} @ ${exp.employer}`, expChildren));
-      blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
+      // Use column layout for the experience (not inside toggle)
+      blocks.push({
+        object: "block",
+        type: "column_list",
+        column_list: {
+          children: [
+            {
+              object: "block",
+              type: "column",
+              column: { children: leftCol }
+            },
+            {
+              object: "block",
+              type: "column",
+              column: { children: rightCol }
+            }
+          ]
+        }
+      });
+
+      blocks.push({ object: "block", type: "divider", divider: {} });
     }
+
+    blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
   }
 
   if (data.education) {
     blocks.push(createHeading("🎓 Education", 2));
     blocks.push({ object: "block", type: "divider", divider: {} });
 
-    // For education, let's use simple blocks instead of columns
-    blocks.push(createParagraph([
-      createText(data.education.school, { bold: true })
-    ]));
+    const leftCol = [
+      createParagraph([
+        createText(data.education.school, { bold: true })
+      ]),
+      createParagraph([
+        createText(data.education.duration, { italic: true })
+      ])
+    ];
 
-    blocks.push(createParagraph([
-      createText(data.education.duration, { italic: true })
-    ]));
+    const rightCol = data.education.majors.map(subject => ({
+      object: "block",
+      type: "bulleted_list_item",
+      bulleted_list_item: {
+        rich_text: [createText(subject)]
+      }
+    }));
 
-    blocks.push({ object: "block", type: "divider", divider: {} });
-
-    data.education.majors.forEach(subject => {
-      blocks.push({
-        object: "block",
-        type: "bulleted_list_item",
-        bulleted_list_item: {
-          rich_text: [createText(subject)]
-        }
-      });
+    blocks.push({
+      object: "block",
+      type: "column_list",
+      column_list: {
+        children: [
+          {
+            object: "block",
+            type: "column",
+            column: { children: leftCol }
+          },
+          {
+            object: "block",
+            type: "column",
+            column: { children: rightCol }
+          }
+        ]
+      }
     });
 
     blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
@@ -351,6 +410,7 @@ async function updateNotion(data) {
         type: "paragraph",
         paragraph: {
           rich_text: [
+            createText("• ", { bold: true }),  // Added big dot before each certification
             createText(`${cert.title} - ${cert.issuingOrganization} (${cert.issueDate})`, { bold: true })
           ]
         }
