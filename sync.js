@@ -105,8 +105,8 @@ async function updateNotion(data) {
       createBullet([createText("GitHub | "), createText(data.bio.github, data.bio.github)])
     ];
     if (data.bio.linkedIn) contactItems.push(createBullet([createText("LinkedIn | "), createText(data.bio.linkedIn, data.bio.linkedIn)]));
-    if (data.bio.twitter) contactItems.push(createBullet([createText("Twitter | "), createText(data.bio.twitter, data.bio.twitter)]));
-
+    if (data.bio.portfolio) contactItems.push(createBullet([createText("Portfolio | "), createText(data.bio.portfolio, data.bio.portfolio)]));
+    if (data.bio.my_apps) contactItems.push(createBullet([createText("My Apps | "), createText(data.bio.my_apps, data.bio.my_apps)]));
     blocks.push(createColumnLayout(data.bio.profile_picture, contactItems));
   }
 
