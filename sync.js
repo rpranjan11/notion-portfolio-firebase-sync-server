@@ -123,7 +123,7 @@ async function updateNotion(data) {
   }
 
   if (data.stacks) {
-    blocks.push(createHeading("🛠 Stacks", 2));
+    blocks.push(createHeading("🛠  Stacks", 2));
     blocks.push({ object: "block", type: "divider", divider: {} });
 
     const stackBlockPairs = Object.entries(data.stacks).map(([stackName, items]) => {
@@ -174,8 +174,77 @@ async function updateNotion(data) {
     blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } }); // final spacing
   }
 
+  if (data.experiences) {
+    blocks.push(createHeading("📌  Experience", 2));
+    blocks.push({ object: "block", type: "divider", divider: {} });
+
+    for (const exp of Object.values(data.experiences)) {
+      if (exp.isDeleted) continue;
+
+      // Create columns for experience
+      const leftCol = [
+        createParagraph([
+          createText(`${exp.designation} @ ${exp.employer}`, { bold: true })
+        ]),
+        createParagraph([
+          createText(exp.location, { color: "gray", bold: true })
+        ]),
+        createParagraph([
+          createText(exp.period, { italic: true, bold: true })
+        ])
+      ];
+
+      const rightCol = [];
+
+      if (exp.achievements) {
+        exp.achievements.split("\n").forEach(line => {
+          const trimmed = line.trim();
+          if (trimmed) {
+            rightCol.push({
+              object: "block",
+              type: "bulleted_list_item",
+              bulleted_list_item: {
+                rich_text: [createText(trimmed.replace(/^➣/, "").trim(), { bold: true })]
+              }
+            });
+          }
+        });
+      }
+
+      if (exp.techs) {
+        rightCol.push(createParagraph([
+          createText(`🛠 Technologies: ${exp.techs}`, { italic: true, bold: true })
+        ]));
+      }
+
+      // Use column layout for the experience (not inside toggle)
+      blocks.push({
+        object: "block",
+        type: "column_list",
+        column_list: {
+          children: [
+            {
+              object: "block",
+              type: "column",
+              column: { children: leftCol }
+            },
+            {
+              object: "block",
+              type: "column",
+              column: { children: rightCol }
+            }
+          ]
+        }
+      });
+
+      blocks.push({ object: "block", type: "divider", divider: {} });
+    }
+
+    blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
+  }
+
   if (data.projects) {
-    blocks.push(createHeading("💻 Projects", 2));
+    blocks.push(createHeading("💻  Projects", 2));
     blocks.push({ object: "block", type: "divider", divider: {} });
 
     for (const project of Object.values(data.projects)) {
@@ -254,7 +323,7 @@ async function updateNotion(data) {
           object: "block",
           type: "bulleted_list_item",
           bulleted_list_item: {
-            rich_text: [createText(`🛠 Tech Stack: ${project.techs}`, { bold: true })]
+            rich_text: [createText(`🛠 Tech Stack: ${project.techs}`, { italic: true, bold: true })]
           }
         });
       }
@@ -285,77 +354,8 @@ async function updateNotion(data) {
     blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } }); // spacer
   }
 
-  if (data.experiences) {
-    blocks.push(createHeading("📌 Experience", 2));
-    blocks.push({ object: "block", type: "divider", divider: {} });
-
-    for (const exp of Object.values(data.experiences)) {
-      if (exp.isDeleted) continue;
-
-      // Create columns for experience
-      const leftCol = [
-        createParagraph([
-          createText(`${exp.designation} @ ${exp.employer}`, { bold: true })
-        ]),
-        createParagraph([
-          createText(exp.location, { color: "gray", bold: true })
-        ]),
-        createParagraph([
-          createText(exp.period, { italic: true, bold: true })
-        ])
-      ];
-
-      const rightCol = [];
-
-      if (exp.achievements) {
-        exp.achievements.split("\n").forEach(line => {
-          const trimmed = line.trim();
-          if (trimmed) {
-            rightCol.push({
-              object: "block",
-              type: "bulleted_list_item",
-              bulleted_list_item: {
-                rich_text: [createText(trimmed.replace(/^➣/, "").trim(), { bold: true })]
-              }
-            });
-          }
-        });
-      }
-
-      if (exp.techs) {
-        rightCol.push(createParagraph([
-          createText(`Technologies: ${exp.techs}`, { italic: true, bold: true })
-        ]));
-      }
-
-      // Use column layout for the experience (not inside toggle)
-      blocks.push({
-        object: "block",
-        type: "column_list",
-        column_list: {
-          children: [
-            {
-              object: "block",
-              type: "column",
-              column: { children: leftCol }
-            },
-            {
-              object: "block",
-              type: "column",
-              column: { children: rightCol }
-            }
-          ]
-        }
-      });
-
-      blocks.push({ object: "block", type: "divider", divider: {} });
-    }
-
-    blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
-  }
-
   if (data.education) {
-    blocks.push(createHeading("🎓 Education", 2));
+    blocks.push(createHeading("🎓  Education", 2));
     blocks.push({ object: "block", type: "divider", divider: {} });
 
     const leftCol = [
@@ -399,7 +399,7 @@ async function updateNotion(data) {
 
   // Add certifications section
   if (data.certifications) {
-    blocks.push(createHeading("🏆 Certifications", 2));
+    blocks.push(createHeading("🏆  Certifications", 2));
     blocks.push({ object: "block", type: "divider", divider: {} });
 
     for (const cert of Object.values(data.certifications)) {
@@ -422,7 +422,7 @@ async function updateNotion(data) {
             {
               type: "text",
               text: {
-                content: "View Credential",
+                content: "View Credential : " + cert.credentials,
                 link: { url: cert.showCredentialsLink }
               },
               annotations: { color: "blue", bold: true }
