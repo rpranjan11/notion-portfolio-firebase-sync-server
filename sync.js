@@ -113,12 +113,12 @@ async function updateNotion(data) {
     blocks.push(createHeading(`👨‍💻 ${data.bio.name} | ${data.bio.position}`, 1));
 
     const contactItems = [
-      createBullet([createText("Email | "), createText(data.bio.email, { color: "blue" })]),
-      createBullet([createText("GitHub | "), createText(data.bio.github, { color: "blue" })])
+      createBullet([createText("Email | "), createText(data.bio.email, { color: "blue", bold: true })]),
+      createBullet([createText("GitHub | "), createText(data.bio.github, { color: "blue", bold: true })])
     ];
-    if (data.bio.linkedIn) contactItems.push(createBullet([createText("LinkedIn | "), createText(data.bio.linkedIn, { color: "blue" })]));
-    if (data.bio.portfolio) contactItems.push(createBullet([createText("Portfolio | "), createText(data.bio.portfolio, { color: "blue" })]));
-    if (data.bio.my_apps) contactItems.push(createBullet([createText("My Apps | "), createText(data.bio.my_apps, { color: "blue" })]));
+    if (data.bio.linkedIn) contactItems.push(createBullet([createText("LinkedIn | "), createText(data.bio.linkedIn, { color: "blue", bold: true })]));
+    if (data.bio.portfolio) contactItems.push(createBullet([createText("Portfolio | "), createText(data.bio.portfolio, { color: "blue", bold: true })]));
+    if (data.bio.my_apps) contactItems.push(createBullet([createText("My Apps | "), createText(data.bio.my_apps, { color: "blue", bold: true })]));
     blocks.push(createColumnLayout(data.bio.profile_picture, contactItems));
   }
 
@@ -145,7 +145,7 @@ async function updateNotion(data) {
         object: "block",
         type: "bulleted_list_item",
         bulleted_list_item: {
-          rich_text: [createText(item)]
+          rich_text: [createText(item, { bold: true })]  // Make all items bold for larger appearance
         }
       }));
 
@@ -188,7 +188,7 @@ async function updateNotion(data) {
 
       if (project.publishedOn) {
         leftCol.push(createParagraph([
-          createText(project.publishedOn, { italic: true })
+          createText(project.publishedOn, { italic: true, bold: true })
         ]));
       }
 
@@ -201,7 +201,7 @@ async function updateNotion(data) {
               content: project.frontendSourceCodeLink,
               link: { url: project.frontendSourceCodeLink }
             },
-            annotations: { color: "blue" }
+            annotations: { color: "blue", bold: true }
           }
         ]));
       }
@@ -215,7 +215,7 @@ async function updateNotion(data) {
               content: project.backendSourceCodeLink,
               link: { url: project.backendSourceCodeLink }
             },
-            annotations: { color: "blue" }
+            annotations: { color: "blue", bold: true }
           }
         ]));
       }
@@ -229,7 +229,7 @@ async function updateNotion(data) {
               content: project.projectLink,
               link: { url: project.projectLink }
             },
-            annotations: { color: "blue" }
+            annotations: { color: "blue", bold: true }
           }
         ]));
       }
@@ -243,7 +243,7 @@ async function updateNotion(data) {
             object: "block",
             type: "bulleted_list_item",
             bulleted_list_item: {
-              rich_text: [createText(line.trim())]
+              rich_text: [createText(line.trim(), { bold: true })]  // Make text bold for larger appearance
             }
           });
         }
@@ -254,7 +254,7 @@ async function updateNotion(data) {
           object: "block",
           type: "bulleted_list_item",
           bulleted_list_item: {
-            rich_text: [createText(`🛠 Tech Stack: ${project.techs}`)]
+            rich_text: [createText(`🛠 Tech Stack: ${project.techs}`, { bold: true })]
           }
         });
       }
@@ -298,10 +298,10 @@ async function updateNotion(data) {
           createText(`${exp.designation} @ ${exp.employer}`, { bold: true })
         ]),
         createParagraph([
-          createText(exp.location, { color: "gray" })
+          createText(exp.location, { color: "gray", bold: true })
         ]),
         createParagraph([
-          createText(exp.period, { italic: true })
+          createText(exp.period, { italic: true, bold: true })
         ])
       ];
 
@@ -315,7 +315,7 @@ async function updateNotion(data) {
               object: "block",
               type: "bulleted_list_item",
               bulleted_list_item: {
-                rich_text: [createText(trimmed.replace(/^➣/, "").trim())]
+                rich_text: [createText(trimmed.replace(/^➣/, "").trim(), { bold: true })]
               }
             });
           }
@@ -324,7 +324,7 @@ async function updateNotion(data) {
 
       if (exp.techs) {
         rightCol.push(createParagraph([
-          createText(`Technologies: ${exp.techs}`, { italic: true })
+          createText(`Technologies: ${exp.techs}`, { italic: true, bold: true })
         ]));
       }
 
@@ -363,7 +363,7 @@ async function updateNotion(data) {
         createText(data.education.school, { bold: true })
       ]),
       createParagraph([
-        createText(data.education.duration, { italic: true })
+        createText(data.education.duration, { italic: true, bold: true })
       ])
     ];
 
@@ -371,7 +371,7 @@ async function updateNotion(data) {
       object: "block",
       type: "bulleted_list_item",
       bulleted_list_item: {
-        rich_text: [createText(subject)]
+        rich_text: [createText(subject, { bold: true })]  // Make text bold for larger appearance
       }
     }));
 
@@ -425,7 +425,7 @@ async function updateNotion(data) {
                 content: "View Credential",
                 link: { url: cert.showCredentialsLink }
               },
-              annotations: { color: "blue" }
+              annotations: { color: "blue", bold: true }
             }
         );
       }
