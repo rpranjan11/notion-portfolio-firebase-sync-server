@@ -13,19 +13,31 @@ const db = admin.database();
 const notion = new Client({ auth: process.env.NOTION_TOKEN });
 const PAGE_ID = process.env.NOTION_PAGE_ID;
 
-const createText = (text, link = null, bold = false) => ({
+const createText = (content, options = {}) => ({
   type: "text",
-  text: { content: text, link: link ? { url: link } : null },
-  annotations: { bold }
-});
-
-const createHeading = (text, level = 2) => ({
-  object: "block",
-  type: `heading_${level}`,
-  [`heading_${level}`]: {
-    rich_text: [createText(text)]
+  text: { content },
+  annotations: {
+    bold: options.bold || false,
+    italic: options.italic || false,
+    color: options.color || "default"
   }
 });
+
+function createHeading(text, level = 2) {
+  return {
+    object: "block",
+    type: `heading_${level}`,
+    [`heading_${level}`]: {
+      rich_text: [
+        {
+          type: "text",
+          text: { content: text },
+          annotations: { color: "blue", bold: true }
+        }
+      ]
+    }
+  };
+}
 
 const createParagraph = text => ({
   object: "block",
@@ -102,60 +114,44 @@ async function updateNotion(data) {
     blocks.push(createHeading("🛠 Stacks", 2));
     blocks.push({ object: "block", type: "divider", divider: {} });
 
-    const leftCol = [];
-    const rightCol = [];
-
-    for (const category in data.stacks) {
-      // Left column: bold label
-      leftCol.push({
+    const stackBlockPairs = Object.entries(data.stacks).map(([stackName, items]) => {
+      const leftLabel = {
         object: "block",
         type: "paragraph",
         paragraph: {
           rich_text: [
             {
               type: "text",
-              text: { content: category },
-              annotations: {
-                bold: true
-              }
+              text: { content: stackName },
+              annotations: { bold: true }
             }
           ]
         }
-      });
+      };
 
-      // Right column: bullets
-      const items = data.stacks[category].map(item => ({
+      const rightBullets = items.map(item => ({
         object: "block",
         type: "bulleted_list_item",
         bulleted_list_item: {
           rich_text: [createText(item)]
         }
       }));
-      rightCol.push(...items);
-    }
 
-    blocks.push({
-      object: "block",
-      type: "column_list",
-      column_list: {
-        children: [
-          {
-            type: "column",
-            column: {
-              children: leftCol
-            }
-          },
-          {
-            type: "column",
-            column: {
-              children: rightCol
-            }
-          }
-        ]
-      }
+      return {
+        object: "block",
+        type: "column_list",
+        column_list: {
+          children: [
+            { type: "column", column: { children: [leftLabel] } },
+            { type: "column", column: { children: rightBullets } }
+          ]
+        }
+      };
     });
 
-    blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } }); // spacer
+    blocks.push(...stackBlockPairs);
+
+    blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } }); // final spacing
   }
 
   if (data.projects) {
