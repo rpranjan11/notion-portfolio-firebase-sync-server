@@ -1,9 +1,9 @@
 {
   "name": "firebase-notion-portfolio-sync-server",
   "version": "1.0.0",
-  "main": "sync.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node sync.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "@notionhq/client": "^2.2.4",
