@@ -3,6 +3,13 @@ const { exec } = require('child_process');
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
+const basicAuth = require('express-basic-auth');
+
+// Add before your routes
+app.use(basicAuth({
+    users: { 'admin': 'ranjan' },
+    challenge: true
+}));
 
 // Add this to package.json: "express": "^4.18.2"
 
