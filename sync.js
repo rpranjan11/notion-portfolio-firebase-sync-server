@@ -74,44 +74,19 @@ const createToggle = (title, children = []) => ({
   }
 });
 
-const createColumnLayout = (imageUrl, contactItems) => ({
-  object: "block",
-  type: "column_list",
-  column_list: {
-    children: [
-      {
-        object: "block",
-        type: "column",
-        column: {
-          children: [
-            // We can't directly resize images in Notion API, but we can add a paragraph
-            // to make the column narrower, giving the effect of a smaller image
-            createParagraph(""),
-            createImageBlock(imageUrl),
-            createParagraph("")
-          ]
-        }
-      },
-      {
-        object: "block",
-        type: "column",
-        column: {
-          children: [
-            createHeading("📫 Contact & Channels", 2),
-            ...contactItems
-          ]
-        }
-      }
-    ]
-  }
-});
-
 async function updateNotion(data) {
   const blocks = [];
 
   if (data.bio) {
     // blocks.push(createHeading(`👨‍💻 ${data.bio.name} | ${data.bio.position}`, 1));
 
+    // Create contact items for the right column
+    const rightColumnChildren = [];
+
+    // Add contact section
+    rightColumnChildren.push(createHeading("📫 Contact & Channels", 2));
+
+    // Contact items
     const contactItems = [
       createBullet([createText("Email | "), createText(data.bio.email, { color: "blue", bold: true })]),
       createBullet([createText("GitHub | "), createText(data.bio.github, { color: "blue", bold: true })])
@@ -119,132 +94,64 @@ async function updateNotion(data) {
     if (data.bio.linkedIn) contactItems.push(createBullet([createText("LinkedIn | "), createText(data.bio.linkedIn, { color: "blue", bold: true })]));
     if (data.bio.portfolio) contactItems.push(createBullet([createText("Portfolio | "), createText(data.bio.portfolio, { color: "blue", bold: true })]));
     if (data.bio.my_apps) contactItems.push(createBullet([createText("My Apps | "), createText(data.bio.my_apps, { color: "blue", bold: true })]));
-    blocks.push(createColumnLayout(data.bio.profile_picture, contactItems));
-  }
 
-  if (data.stacks) {
-    blocks.push(createHeading("🛠  Stacks", 2));
-    blocks.push({ object: "block", type: "divider", divider: {} });
+    // Add contact items to right column
+    rightColumnChildren.push(...contactItems);
 
-    const stackBlockPairs = Object.entries(data.stacks).map(([stackName, items]) => {
-      const leftLabel = {
-        object: "block",
-        type: "paragraph",
-        paragraph: {
-          rich_text: [
-            {
-              type: "text",
-              text: { content: stackName },
-              annotations: { bold: true }
-            }
-          ]
-        }
-      };
+    // Add a small spacer
+    rightColumnChildren.push(createParagraph(""));
 
-      const rightBullets = items.map(item => ({
-        object: "block",
-        type: "bulleted_list_item",
-        bulleted_list_item: {
-          rich_text: [createText(item, { bold: true })]  // Make all items bold for larger appearance
-        }
-      }));
+    // Add stacks section right after contact info
+    if (data.stacks) {
+      rightColumnChildren.push(createHeading("🛠 Stacks", 2));
 
-      return {
-        object: "block",
-        type: "column_list",
-        column_list: {
-          children: [
-            {
-              object: "block",
-              type: "column",
-              column: { children: [leftLabel] }
-            },
-            {
-              object: "block",
-              type: "column",
-              column: { children: rightBullets }
-            }
-          ]
-        }
-      };
-    });
-
-    blocks.push(...stackBlockPairs);
-
-    blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } }); // final spacing
-  }
-
-  if (data.experiences) {
-    blocks.push(createHeading("📌  Experience", 2));
-    blocks.push({ object: "block", type: "divider", divider: {} });
-
-    for (const exp of Object.values(data.experiences)) {
-      if (exp.isDeleted) continue;
-
-      // Create columns for experience
-      const leftCol = [
-        createParagraph([
-          createText(`${exp.designation} @ ${exp.employer}`, { bold: true })
-        ]),
-        createParagraph([
-          createText(exp.location, { color: "gray", bold: true })
-        ]),
-        createParagraph([
-          createText(exp.period, { italic: true, bold: true })
-        ])
-      ];
-
-      const rightCol = [];
-
-      if (exp.achievements) {
-        exp.achievements.split("\n").forEach(line => {
-          const trimmed = line.trim();
-          if (trimmed) {
-            rightCol.push({
-              object: "block",
-              type: "bulleted_list_item",
-              bulleted_list_item: {
-                rich_text: [createText(trimmed.replace(/^➣/, "").trim(), { bold: true })]
-              }
-            });
-          }
-        });
-      }
-
-      if (exp.techs) {
-        rightCol.push(createParagraph([
-          createText(`🛠 Technologies: ${exp.techs}`, { italic: true, bold: true })
+      // Convert stacks to compact format
+      for (const [stackName, items] of Object.entries(data.stacks)) {
+        rightColumnChildren.push(createBullet([
+          createText(`${stackName}: `, { bold: true }),
+          createText(items.join(", "), { bold: true })
         ]));
       }
-
-      // Use column layout for the experience (not inside toggle)
-      blocks.push({
-        object: "block",
-        type: "column_list",
-        column_list: {
-          children: [
-            {
-              object: "block",
-              type: "column",
-              column: { children: leftCol }
-            },
-            {
-              object: "block",
-              type: "column",
-              column: { children: rightCol }
-            }
-          ]
-        }
-      });
-
-      blocks.push({ object: "block", type: "divider", divider: {} });
     }
 
+    // Create the two-column layout with image on left and content on right
+    blocks.push({
+      object: "block",
+      type: "column_list",
+      column_list: {
+        children: [
+          {
+            object: "block",
+            type: "column",
+            column: {
+              children: [
+                // We can't directly resize images in Notion API, but we can add a paragraph
+                // to make the column narrower, giving the effect of a smaller image
+                createParagraph(""),
+                createImageBlock(data.bio.profile_picture),
+                createParagraph("")
+              ]
+            }
+          },
+          {
+            object: "block",
+            type: "column",
+            column: {
+              children: rightColumnChildren
+            }
+          }
+        ]
+      }
+    });
+
+    // Add a spacer after the bio/contact/stacks section
     blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
   }
 
+  // NOTE: Original stacks section removed since it's now incorporated in the right column
+
   if (data.projects) {
-    blocks.push(createHeading("💻  Projects", 2));
+    blocks.push(createHeading("💻 Projects", 2));
     blocks.push({ object: "block", type: "divider", divider: {} });
 
     for (const project of Object.values(data.projects)) {
@@ -252,7 +159,9 @@ async function updateNotion(data) {
 
       // Create a block for project outside of toggles
       const leftCol = [
-        createParagraph([createText(`${project.title}`, { bold: true })])
+        createParagraph([
+          createText(`${project.title}`, { bold: true })
+        ])
       ];
 
       if (project.publishedOn) {
@@ -354,8 +263,77 @@ async function updateNotion(data) {
     blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } }); // spacer
   }
 
+  if (data.experiences) {
+    blocks.push(createHeading("📌 Experience", 2));
+    blocks.push({ object: "block", type: "divider", divider: {} });
+
+    for (const exp of Object.values(data.experiences)) {
+      if (exp.isDeleted) continue;
+
+      // Create columns for experience
+      const leftCol = [
+        createParagraph([
+          createText(`${exp.designation} @ ${exp.employer}`, { bold: true })
+        ]),
+        createParagraph([
+          createText(exp.location, { color: "gray", bold: true })
+        ]),
+        createParagraph([
+          createText(exp.period, { italic: true, bold: true })
+        ])
+      ];
+
+      const rightCol = [];
+
+      if (exp.achievements) {
+        exp.achievements.split("\n").forEach(line => {
+          const trimmed = line.trim();
+          if (trimmed) {
+            rightCol.push({
+              object: "block",
+              type: "bulleted_list_item",
+              bulleted_list_item: {
+                rich_text: [createText(trimmed.replace(/^➣/, "").trim(), { bold: true })]
+              }
+            });
+          }
+        });
+      }
+
+      if (exp.techs) {
+        rightCol.push(createParagraph([
+          createText(`🛠 Technologies: ${exp.techs}`, { italic: true, bold: true })
+        ]));
+      }
+
+      // Use column layout for the experience (not inside toggle)
+      blocks.push({
+        object: "block",
+        type: "column_list",
+        column_list: {
+          children: [
+            {
+              object: "block",
+              type: "column",
+              column: { children: leftCol }
+            },
+            {
+              object: "block",
+              type: "column",
+              column: { children: rightCol }
+            }
+          ]
+        }
+      });
+
+      blocks.push({ object: "block", type: "divider", divider: {} });
+    }
+
+    blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
+  }
+
   if (data.education) {
-    blocks.push(createHeading("🎓  Education", 2));
+    blocks.push(createHeading("🎓 Education", 2));
     blocks.push({ object: "block", type: "divider", divider: {} });
 
     const leftCol = [
@@ -399,7 +377,7 @@ async function updateNotion(data) {
 
   // Add certifications section
   if (data.certifications) {
-    blocks.push(createHeading("🏆  Certifications", 2));
+    blocks.push(createHeading("🏆 Certifications", 2));
     blocks.push({ object: "block", type: "divider", divider: {} });
 
     for (const cert of Object.values(data.certifications)) {
@@ -422,7 +400,7 @@ async function updateNotion(data) {
             {
               type: "text",
               text: {
-                content: "View Credential : " + cert.credentials,
+                content: "View Credential",
                 link: { url: cert.showCredentialsLink }
               },
               annotations: { color: "blue", bold: true }
