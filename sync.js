@@ -110,7 +110,7 @@ async function updateNotion(data) {
   const blocks = [];
 
   if (data.bio) {
-    //blocks.push(createHeading(`👨‍💻 ${data.bio.name} | ${data.bio.position}`, 1));
+    // blocks.push(createHeading(`👨‍💻 ${data.bio.name} | ${data.bio.position}`, 1));
 
     const contactItems = [
       createBullet([createText("Email | "), createText(data.bio.email, { color: "blue", bold: true })]),
