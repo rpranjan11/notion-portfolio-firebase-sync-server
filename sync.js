@@ -173,56 +173,56 @@ async function updateNotion(data) {
       if (data.stacks["Back-End"]) {
 
         contactItems.push(createBullet([
-          createText("Back-End: ", { bold: true }),
+          createText("Back-End :: ", { bold: true }),
           createText(data.stacks["Back-End"].join(", "))
         ]));
       }
 
       if (data.stacks["Front-End"]) {
         rightCol.push(createBullet([
-          createText("Front-End: ", { bold: true }),
+          createText("Front-End :: ", { bold: true }),
           createText(data.stacks["Front-End"].join(", "))
         ]));
       }
 
       if (data.stacks["Database"]) {
         rightCol.push(createBullet([
-          createText("Database: ", { bold: true }),
+          createText("Database :: ", { bold: true }),
           createText(data.stacks["Database"].join(", "))
         ]));
       }
 
       if (data.stacks["DevOps"]) {
         rightCol.push(createBullet([
-          createText("DevOps: ", { bold: true }),
+          createText("DevOps :: ", { bold: true }),
           createText(data.stacks["DevOps"].join(", "))
         ]));
       }
 
       if (data.stacks["ML & AI"]) {
         rightCol.push(createBullet([
-          createText("ML & AI: ", { bold: true }),
+          createText("ML & AI :: ", { bold: true }),
           createText(data.stacks["ML & AI"].join(", "))
         ]));
       }
 
       if (data.stacks["Build Tools"]) {
         rightCol.push(createBullet([
-          createText("Build Tools: ", { bold: true }),
+          createText("Build Tools :: ", { bold: true }),
           createText(data.stacks["Build Tools"].join(", "))
         ]));
       }
 
       if (data.stacks["Collaboration Tools"]) {
         rightCol.push(createBullet([
-          createText("Collaboration Tools: ", { bold: true }),
+          createText("Collaboration Tools :: ", { bold: true }),
           createText(data.stacks["Collaboration Tools"].join(", "))
         ]));
       }
 
       if (data.stacks["Operating Systems"]) {
         rightCol.push(createBullet([
-          createText("Operating Systems: ", { bold: true }),
+          createText("Operating Systems :: ", { bold: true }),
           createText(data.stacks["Operating Systems"].join(", "))
         ]));
       }
@@ -279,8 +279,8 @@ async function updateNotion(data) {
       // Only achievements go in the right column
       const rightCol = [];
 
-      if (exp.achievements) {
-        exp.achievements.split("\n").forEach(line => {
+      if (exp.notion_achievements) {
+        exp.notion_achievements.split("\n").forEach(line => {
           const trimmed = line.trim();
           if (trimmed) {
             rightCol.push({
@@ -387,7 +387,7 @@ async function updateNotion(data) {
       const rightCol = [];
 
       // Description lines
-      project.description?.split("\n").forEach(line => {
+      project.notion_description?.split("\n").forEach(line => {
         if (line.trim()) {
           rightCol.push({
             object: "block",
