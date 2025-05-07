@@ -86,7 +86,14 @@ async function updateNotion(data) {
     const rightCol = [];
 
     // Add contact section
-    rightCol.push(createHeading("📫 Contact & Channels", 2));
+    rightCol.push(createParagraph([{
+      type: "text",
+      text: { content: "📫 Contact & Channels" },
+      annotations: {
+        bold: true,
+        color: "blue"
+      }
+    }]));
 
     // Contact items with proper clickable links
     const contactItems = [
@@ -159,12 +166,16 @@ async function updateNotion(data) {
     // Add contact items to right column
     rightCol.push(...contactItems);
 
-    // Add a small spacer
-    rightCol.push(createParagraph(""));
-
     // Add stacks section right after contact info
     if (data.stacks) {
-      rightCol.push(createHeading("🛠 Stacks", 2));
+      rightCol.push(createParagraph([{
+        type: "text",
+        text: { content: "🛠 Stacks" },
+        annotations: {
+          bold: true,
+          color: "blue"
+        }
+      }]));
 
       // Convert stacks to compact format
       for (const [stackName, items] of Object.entries(data.stacks)) {
