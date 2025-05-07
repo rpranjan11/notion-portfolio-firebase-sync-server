@@ -351,12 +351,22 @@ async function updateNotion(data) {
     for (const project of Object.values(data.projects)) {
       if (project.isDeleted) continue;
 
+      blocks.push({
+        object: "block",
+        type: "heading_3",
+        heading_3: {
+          rich_text: [
+            {
+              type: "text",
+              text: { content: `${project.title}` },
+              annotations: { color: "blue", bold: true }
+            }
+          ]
+        }
+      });
+
       // CHANGE 2: Move more content to the left column, leave only description and techs on the right
-      const leftCol = [
-        createParagraph([
-          createText(`${project.title}`, { color: "blue", bold: true })
-        ])
-      ];
+      const leftCol = [];
 
       // Add date to left column
       if (project.publishedOn) {
