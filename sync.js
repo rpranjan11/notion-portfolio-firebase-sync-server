@@ -118,11 +118,8 @@ async function updateNotion(data) {
           },
           annotations: { color: "blue", bold: true }
         }
-      ])
-    ];
-
-    if (data.bio.linkedIn) {
-      contactItems.push(createBullet([
+      ]),
+      createBullet([
         createText("LinkedIn | "),
         {
           type: "text",
@@ -132,11 +129,8 @@ async function updateNotion(data) {
           },
           annotations: { color: "blue", bold: true }
         }
-      ]));
-    }
-
-    if (data.bio.portfolio) {
-      contactItems.push(createBullet([
+      ]),
+      createBullet([
         createText("Portfolio | "),
         {
           type: "text",
@@ -146,11 +140,8 @@ async function updateNotion(data) {
           },
           annotations: { color: "blue", bold: true }
         }
-      ]));
-    }
-
-    if (data.bio.my_apps) {
-      contactItems.push(createBullet([
+      ]),
+      createBullet([
         createText("My Apps | "),
         {
           type: "text",
@@ -160,14 +151,15 @@ async function updateNotion(data) {
           },
           annotations: { color: "blue", bold: true }
         }
-      ]));
-    }
+      ])
+    ];
 
     // Add contact items to right column
     rightCol.push(...contactItems);
 
     // Add stacks section right after contact info
     if (data.stacks) {
+      rightCol.push(createParagraph(""));
       rightCol.push(createParagraph([{
         type: "text",
         text: { content: "🛠 Stacks" },
@@ -177,11 +169,61 @@ async function updateNotion(data) {
         }
       }]));
 
-      // Convert stacks to compact format
-      for (const [stackName, items] of Object.entries(data.stacks)) {
+      // For each stack category, create a bold heading and list the items in a paragraph (not bullet)
+      if (data.stacks["Back-End"]) {
+
+        contactItems.push(createBullet([
+          createText("Back-End: ", { bold: true }),
+          createText(data.stacks["Back-End"].join(", "))
+        ]));
+      }
+
+      if (data.stacks["Front-End"]) {
         rightCol.push(createBullet([
-          createText(`${stackName}: `, { bold: true }),
-          createText(items.join(", "), { bold: true })
+          createText("Front-End: ", { bold: true }),
+          createText(data.stacks["Front-End"].join(", "))
+        ]));
+      }
+
+      if (data.stacks["Database"]) {
+        rightCol.push(createBullet([
+          createText("Database: ", { bold: true }),
+          createText(data.stacks["Database"].join(", "))
+        ]));
+      }
+
+      if (data.stacks["DevOps"]) {
+        rightCol.push(createBullet([
+          createText("DevOps: ", { bold: true }),
+          createText(data.stacks["DevOps"].join(", "))
+        ]));
+      }
+
+      if (data.stacks["ML & AI"]) {
+        rightCol.push(createBullet([
+          createText("ML & AI: ", { bold: true }),
+          createText(data.stacks["ML & AI"].join(", "))
+        ]));
+      }
+
+      if (data.stacks["Build Tools"]) {
+        rightCol.push(createBullet([
+          createText("Build Tools: ", { bold: true }),
+          createText(data.stacks["Build Tools"].join(", "))
+        ]));
+      }
+
+      if (data.stacks["Collaboration Tools"]) {
+        rightCol.push(createBullet([
+          createText("Collaboration Tools: ", { bold: true }),
+          createText(data.stacks["Collaboration Tools"].join(", "))
+        ]));
+      }
+
+      if (data.stacks["Operating Systems"]) {
+        rightCol.push(createBullet([
+          createText("Operating Systems: ", { bold: true }),
+          createText(data.stacks["Operating Systems"].join(", "))
         ]));
       }
     }
