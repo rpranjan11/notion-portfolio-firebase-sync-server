@@ -286,13 +286,24 @@ async function updateNotion(data) {
         exp.notion_achievements.split("\n").forEach(line => {
           const trimmed = line.trim();
           if (trimmed) {
-            rightCol.push({
-              object: "block",
-              type: "bulleted_list_item",
-              bulleted_list_item: {
-                rich_text: [createText(trimmed.replace(/^➣/, "").trim(), { bold: true })]
-              }
-            });
+            if (trimmed.startsWith("●")) {
+                rightCol.push({
+                    object: "block",
+                    type: "paragraph",
+                    paragraph: {
+                    rich_text: [createText(trimmed.replace(/^➣/, "").trim(), { color: "blue", bold: true })]
+                    }
+                });
+            }
+            else {
+              rightCol.push({
+                object: "block",
+                type: "bulleted_list_item",
+                bulleted_list_item: {
+                  rich_text: [createText(trimmed.replace(/^➣/, "").trim(), {bold: true})]
+                }
+              });
+            }
           }
         });
       }
