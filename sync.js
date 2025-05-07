@@ -263,11 +263,22 @@ async function updateNotion(data) {
     for (const exp of Object.values(data.experiences)) {
       if (exp.isDeleted) continue;
 
+      blocks.push({
+        object: "block",
+        type: "heading_3",
+        heading_3: {
+          rich_text: [
+            {
+              type: "text",
+              text: { content: `${exp.designation} @ ${exp.employer}` },
+              annotations: { color: "blue", bold: true }
+            }
+          ]
+        }
+      });
+
       // CHANGE 1: Move more content to the left column, only achievements on the right
       const leftCol = [
-        createParagraph([
-          createText(`${exp.designation} @ ${exp.employer}`, { color: "blue", bold: true })
-        ]),
         createParagraph([
           createText(exp.location, { color: "gray", bold: true })
         ]),
