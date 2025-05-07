@@ -77,7 +77,7 @@ async function updateNotion(data) {
   const blocks = [];
 
   if (data.bio) {
-    // blocks.push(createHeading(`👨‍💻 ${data.bio.name} | ${data.bio.position}`, 1)); //Commented out to avoid duplication
+    // blocks.push(createHeading(`👨‍💻 ${data.bio.name} | ${data.bio.position}`, 1)); // Commented out to avoid duplication
 
     // Create a minimal left column with just the image
     const leftCol = [createImageBlock(data.bio.profile_picture)];
@@ -210,15 +210,11 @@ async function updateNotion(data) {
     for (const exp of Object.values(data.experiences)) {
       if (exp.isDeleted) continue;
 
-      // Create a MINIMAL left column with just job title and employer
+      // CHANGE 1: Move more content to the left column, only achievements on the right
       const leftCol = [
         createParagraph([
           createText(`${exp.designation} @ ${exp.employer}`, { bold: true })
-        ])
-      ];
-
-      // Move location, period, achievements, and techs to the right column
-      const rightCol = [
+        ]),
         createParagraph([
           createText(exp.location, { color: "gray", bold: true })
         ]),
@@ -227,8 +223,8 @@ async function updateNotion(data) {
         ])
       ];
 
-      // Add a divider between basic info and achievements
-      rightCol.push({ object: "block", type: "divider", divider: {} });
+      // Only achievements go in the right column
+      const rightCol = [];
 
       if (exp.achievements) {
         exp.achievements.split("\n").forEach(line => {
@@ -245,13 +241,6 @@ async function updateNotion(data) {
         });
       }
 
-      // if (exp.techs) {
-      //   rightCol.push(createParagraph([
-      //     createText(`🛠 Technologies: ${exp.techs}`, { italic: true, bold: true })
-      //   ]));
-      // }
-
-      // Use column layout with minimal left content to force wider right column
       blocks.push({
         object: "block",
         type: "column_list",
@@ -284,26 +273,23 @@ async function updateNotion(data) {
     for (const project of Object.values(data.projects)) {
       if (project.isDeleted) continue;
 
-      // Create a MINIMAL left column with just the project title
+      // CHANGE 2: Move more content to the left column, leave only description and techs on the right
       const leftCol = [
         createParagraph([
           createText(`${project.title}`, { bold: true })
         ])
       ];
 
-      // Move EVERYTHING ELSE to the right column
-      const rightCol = [];
-
-      // First add the date
+      // Add date to left column
       if (project.publishedOn) {
-        rightCol.push(createParagraph([
+        leftCol.push(createParagraph([
           createText(project.publishedOn, { italic: true, bold: true })
         ]));
       }
 
-      // Add all links to the right column with proper link objects
+      // Add all links to left column
       if (project.frontendSourceCodeLink) {
-        rightCol.push(createParagraph([
+        leftCol.push(createParagraph([
           createText("🔗 Frontend Source Code: ", { bold: true }),
           {
             type: "text",
@@ -317,7 +303,7 @@ async function updateNotion(data) {
       }
 
       if (project.backendSourceCodeLink) {
-        rightCol.push(createParagraph([
+        leftCol.push(createParagraph([
           createText("🔗 Backend Source Code: ", { bold: true }),
           {
             type: "text",
@@ -331,7 +317,7 @@ async function updateNotion(data) {
       }
 
       if (project.projectLink) {
-        rightCol.push(createParagraph([
+        leftCol.push(createParagraph([
           createText("🔗 Project Link: ", { bold: true }),
           {
             type: "text",
@@ -344,8 +330,8 @@ async function updateNotion(data) {
         ]));
       }
 
-      // Add a divider between links and description
-      rightCol.push({ object: "block", type: "divider", divider: {} });
+      // Right column will have only description and tech stack
+      const rightCol = [];
 
       // Description lines
       project.description?.split("\n").forEach(line => {
@@ -370,7 +356,6 @@ async function updateNotion(data) {
         });
       }
 
-      // Use column layout with minimal left content to force wider right column
       blocks.push({
         object: "block",
         type: "column_list",
@@ -400,35 +385,35 @@ async function updateNotion(data) {
     blocks.push(createHeading("🎓 Education", 2));
     blocks.push({ object: "block", type: "divider", divider: {} });
 
-    // MINIMAL left column with just school name
-    const leftCol = [
-      createParagraph([
-        createText(data.education.school, { bold: true })
-      ])
-    ];
+    // CHANGE 3: Update education section to include course and rearrange content
+    const leftCol = [];
 
-    // Move duration and majors to the right column
-    const rightCol = [
-      createParagraph([
-        createText(data.education.duration, { italic: true, bold: true })
-      ])
-    ];
+    // Add course first if it exists
+    if (data.education.course) {
+      leftCol.push(createParagraph([
+        createText(data.education.course, { bold: true })
+      ]));
+    }
 
-    // Add a divider between duration and majors
-    rightCol.push({ object: "block", type: "divider", divider: {} });
+    // Then add school
+    leftCol.push(createParagraph([
+      createText(data.education.school, { bold: true })
+    ]));
 
-    // Add all majors to right column
-    data.education.majors.forEach(subject => {
-      rightCol.push({
-        object: "block",
-        type: "bulleted_list_item",
-        bulleted_list_item: {
-          rich_text: [createText(subject, { bold: true })]
-        }
-      });
-    });
+    // Then add duration
+    leftCol.push(createParagraph([
+      createText(data.education.duration, { italic: true, bold: true })
+    ]));
 
-    // Use column layout with minimal left content to force wider right column
+    // Only majors on the right column
+    const rightCol = data.education.majors.map(subject => ({
+      object: "block",
+      type: "bulleted_list_item",
+      bulleted_list_item: {
+        rich_text: [createText(subject, { bold: true })]
+      }
+    }));
+
     blocks.push({
       object: "block",
       type: "column_list",
