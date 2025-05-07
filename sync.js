@@ -77,7 +77,7 @@ async function updateNotion(data) {
   const blocks = [];
 
   if (data.bio) {
-    blocks.push(createHeading(`👨‍💻 ${data.bio.name} | ${data.bio.position}`, 1));
+    // blocks.push(createHeading(`👨‍💻 ${data.bio.name} | ${data.bio.position}`, 1)); //Commented out to avoid duplication
 
     // Create a minimal left column with just the image
     const leftCol = [createImageBlock(data.bio.profile_picture)];
@@ -203,6 +203,80 @@ async function updateNotion(data) {
     blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
   }
 
+  if (data.experiences) {
+    blocks.push(createHeading("📌 Experience", 2));
+    blocks.push({ object: "block", type: "divider", divider: {} });
+
+    for (const exp of Object.values(data.experiences)) {
+      if (exp.isDeleted) continue;
+
+      // Create a MINIMAL left column with just job title and employer
+      const leftCol = [
+        createParagraph([
+          createText(`${exp.designation} @ ${exp.employer}`, { bold: true })
+        ])
+      ];
+
+      // Move location, period, achievements, and techs to the right column
+      const rightCol = [
+        createParagraph([
+          createText(exp.location, { color: "gray", bold: true })
+        ]),
+        createParagraph([
+          createText(exp.period, { italic: true, bold: true })
+        ])
+      ];
+
+      // Add a divider between basic info and achievements
+      rightCol.push({ object: "block", type: "divider", divider: {} });
+
+      if (exp.achievements) {
+        exp.achievements.split("\n").forEach(line => {
+          const trimmed = line.trim();
+          if (trimmed) {
+            rightCol.push({
+              object: "block",
+              type: "bulleted_list_item",
+              bulleted_list_item: {
+                rich_text: [createText(trimmed.replace(/^➣/, "").trim(), { bold: true })]
+              }
+            });
+          }
+        });
+      }
+
+      // if (exp.techs) {
+      //   rightCol.push(createParagraph([
+      //     createText(`🛠 Technologies: ${exp.techs}`, { italic: true, bold: true })
+      //   ]));
+      // }
+
+      // Use column layout with minimal left content to force wider right column
+      blocks.push({
+        object: "block",
+        type: "column_list",
+        column_list: {
+          children: [
+            {
+              object: "block",
+              type: "column",
+              column: { children: leftCol }
+            },
+            {
+              object: "block",
+              type: "column",
+              column: { children: rightCol }
+            }
+          ]
+        }
+      });
+
+      blocks.push({ object: "block", type: "divider", divider: {} });
+    }
+
+    blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
+  }
+
   if (data.projects) {
     blocks.push(createHeading("💻 Projects", 2));
     blocks.push({ object: "block", type: "divider", divider: {} });
@@ -320,80 +394,6 @@ async function updateNotion(data) {
     }
 
     blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } }); // spacer
-  }
-
-  if (data.experiences) {
-    blocks.push(createHeading("📌 Experience", 2));
-    blocks.push({ object: "block", type: "divider", divider: {} });
-
-    for (const exp of Object.values(data.experiences)) {
-      if (exp.isDeleted) continue;
-
-      // Create a MINIMAL left column with just job title and employer
-      const leftCol = [
-        createParagraph([
-          createText(`${exp.designation} @ ${exp.employer}`, { bold: true })
-        ])
-      ];
-
-      // Move location, period, achievements, and techs to the right column
-      const rightCol = [
-        createParagraph([
-          createText(exp.location, { color: "gray", bold: true })
-        ]),
-        createParagraph([
-          createText(exp.period, { italic: true, bold: true })
-        ])
-      ];
-
-      // Add a divider between basic info and achievements
-      rightCol.push({ object: "block", type: "divider", divider: {} });
-
-      if (exp.achievements) {
-        exp.achievements.split("\n").forEach(line => {
-          const trimmed = line.trim();
-          if (trimmed) {
-            rightCol.push({
-              object: "block",
-              type: "bulleted_list_item",
-              bulleted_list_item: {
-                rich_text: [createText(trimmed.replace(/^➣/, "").trim(), { bold: true })]
-              }
-            });
-          }
-        });
-      }
-
-      if (exp.techs) {
-        rightCol.push(createParagraph([
-          createText(`🛠 Technologies: ${exp.techs}`, { italic: true, bold: true })
-        ]));
-      }
-
-      // Use column layout with minimal left content to force wider right column
-      blocks.push({
-        object: "block",
-        type: "column_list",
-        column_list: {
-          children: [
-            {
-              object: "block",
-              type: "column",
-              column: { children: leftCol }
-            },
-            {
-              object: "block",
-              type: "column",
-              column: { children: rightCol }
-            }
-          ]
-        }
-      });
-
-      blocks.push({ object: "block", type: "divider", divider: {} });
-    }
-
-    blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
   }
 
   if (data.education) {
