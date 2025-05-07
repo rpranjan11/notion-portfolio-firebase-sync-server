@@ -1,4 +1,4 @@
-// sync.js (Final styled version with layout, emojis, and toggles)
+// sync.js (Revised with content redistribution and fixed clickable links)
 require("dotenv").config();
 const { Client } = require("@notionhq/client");
 const admin = require("firebase-admin");
@@ -55,7 +55,6 @@ const createBullet = contentArr => ({
   }
 });
 
-// Smaller image block (40% smaller)
 const createImageBlock = url => ({
   object: "block",
   type: "image",
@@ -78,43 +77,105 @@ async function updateNotion(data) {
   const blocks = [];
 
   if (data.bio) {
-    // blocks.push(createHeading(`👨‍💻 ${data.bio.name} | ${data.bio.position}`, 1));
+    blocks.push(createHeading(`👨‍💻 ${data.bio.name} | ${data.bio.position}`, 1));
 
-    // Create contact items for the right column
-    const rightColumnChildren = [];
+    // Create a minimal left column with just the image
+    const leftCol = [createImageBlock(data.bio.profile_picture)];
+
+    // Move ALL content to the right column
+    const rightCol = [];
 
     // Add contact section
-    rightColumnChildren.push(createHeading("📫 Contact & Channels", 2));
+    rightCol.push(createHeading("📫 Contact & Channels", 2));
 
-    // Contact items
+    // Contact items with proper clickable links
     const contactItems = [
-      createBullet([createText("Email | "), createText(data.bio.email, { color: "blue", bold: true })]),
-      createBullet([createText("GitHub | "), createText(data.bio.github, { color: "blue", bold: true })])
+      createBullet([
+        createText("Email | "),
+        {
+          type: "text",
+          text: {
+            content: data.bio.email,
+            link: { url: `mailto:${data.bio.email}` }
+          },
+          annotations: { color: "blue", bold: true }
+        }
+      ]),
+      createBullet([
+        createText("GitHub | "),
+        {
+          type: "text",
+          text: {
+            content: data.bio.github,
+            link: { url: data.bio.github }
+          },
+          annotations: { color: "blue", bold: true }
+        }
+      ])
     ];
-    if (data.bio.linkedIn) contactItems.push(createBullet([createText("LinkedIn | "), createText(data.bio.linkedIn, { color: "blue", bold: true })]));
-    if (data.bio.portfolio) contactItems.push(createBullet([createText("Portfolio | "), createText(data.bio.portfolio, { color: "blue", bold: true })]));
-    if (data.bio.my_apps) contactItems.push(createBullet([createText("My Apps | "), createText(data.bio.my_apps, { color: "blue", bold: true })]));
+
+    if (data.bio.linkedIn) {
+      contactItems.push(createBullet([
+        createText("LinkedIn | "),
+        {
+          type: "text",
+          text: {
+            content: data.bio.linkedIn,
+            link: { url: data.bio.linkedIn }
+          },
+          annotations: { color: "blue", bold: true }
+        }
+      ]));
+    }
+
+    if (data.bio.portfolio) {
+      contactItems.push(createBullet([
+        createText("Portfolio | "),
+        {
+          type: "text",
+          text: {
+            content: data.bio.portfolio,
+            link: { url: data.bio.portfolio }
+          },
+          annotations: { color: "blue", bold: true }
+        }
+      ]));
+    }
+
+    if (data.bio.my_apps) {
+      contactItems.push(createBullet([
+        createText("My Apps | "),
+        {
+          type: "text",
+          text: {
+            content: data.bio.my_apps,
+            link: { url: data.bio.my_apps }
+          },
+          annotations: { color: "blue", bold: true }
+        }
+      ]));
+    }
 
     // Add contact items to right column
-    rightColumnChildren.push(...contactItems);
+    rightCol.push(...contactItems);
 
     // Add a small spacer
-    rightColumnChildren.push(createParagraph(""));
+    rightCol.push(createParagraph(""));
 
     // Add stacks section right after contact info
     if (data.stacks) {
-      rightColumnChildren.push(createHeading("🛠 Stacks", 2));
+      rightCol.push(createHeading("🛠 Stacks", 2));
 
       // Convert stacks to compact format
       for (const [stackName, items] of Object.entries(data.stacks)) {
-        rightColumnChildren.push(createBullet([
+        rightCol.push(createBullet([
           createText(`${stackName}: `, { bold: true }),
           createText(items.join(", "), { bold: true })
         ]));
       }
     }
 
-    // Create the two-column layout with image on left and content on right
+    // Create the two-column layout with minimal left content and maximum right content
     blocks.push({
       object: "block",
       type: "column_list",
@@ -124,20 +185,14 @@ async function updateNotion(data) {
             object: "block",
             type: "column",
             column: {
-              children: [
-                // We can't directly resize images in Notion API, but we can add a paragraph
-                // to make the column narrower, giving the effect of a smaller image
-                createParagraph(""),
-                createImageBlock(data.bio.profile_picture),
-                createParagraph("")
-              ]
+              children: leftCol
             }
           },
           {
             object: "block",
             type: "column",
             column: {
-              children: rightColumnChildren
+              children: rightCol
             }
           }
         ]
@@ -148,75 +203,6 @@ async function updateNotion(data) {
     blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
   }
 
-  if (data.experiences) {
-    blocks.push(createHeading("📌 Experience", 2));
-    blocks.push({ object: "block", type: "divider", divider: {} });
-
-    for (const exp of Object.values(data.experiences)) {
-      if (exp.isDeleted) continue;
-
-      // Create columns for experience
-      const leftCol = [
-        createParagraph([
-          createText(`${exp.designation} @ ${exp.employer}`, { bold: true })
-        ]),
-        createParagraph([
-          createText(exp.location, { color: "gray", bold: true })
-        ]),
-        createParagraph([
-          createText(exp.period, { italic: true, bold: true })
-        ])
-      ];
-
-      const rightCol = [];
-
-      if (exp.notion_achievements) {
-        exp.notion_achievements.split("\n").forEach(line => {
-          const trimmed = line.trim();
-          if (trimmed) {
-            rightCol.push({
-              object: "block",
-              type: "bulleted_list_item",
-              bulleted_list_item: {
-                rich_text: [createText(trimmed.replace(/^➣/, "").trim(), { bold: true })]
-              }
-            });
-          }
-        });
-      }
-
-      if (exp.techs) {
-        rightCol.push(createParagraph([
-          createText(`🛠 Technologies: ${exp.techs}`, { italic: true, bold: true })
-        ]));
-      }
-
-      // Use column layout for the experience (not inside toggle)
-      blocks.push({
-        object: "block",
-        type: "column_list",
-        column_list: {
-          children: [
-            {
-              object: "block",
-              type: "column",
-              column: { children: leftCol }
-            },
-            {
-              object: "block",
-              type: "column",
-              column: { children: rightCol }
-            }
-          ]
-        }
-      });
-
-      blocks.push({ object: "block", type: "divider", divider: {} });
-    }
-
-    blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
-  }
-
   if (data.projects) {
     blocks.push(createHeading("💻 Projects", 2));
     blocks.push({ object: "block", type: "divider", divider: {} });
@@ -224,21 +210,26 @@ async function updateNotion(data) {
     for (const project of Object.values(data.projects)) {
       if (project.isDeleted) continue;
 
-      // Create a block for project outside of toggles
+      // Create a MINIMAL left column with just the project title
       const leftCol = [
         createParagraph([
           createText(`${project.title}`, { bold: true })
         ])
       ];
 
+      // Move EVERYTHING ELSE to the right column
+      const rightCol = [];
+
+      // First add the date
       if (project.publishedOn) {
-        leftCol.push(createParagraph([
+        rightCol.push(createParagraph([
           createText(project.publishedOn, { italic: true, bold: true })
         ]));
       }
 
+      // Add all links to the right column with proper link objects
       if (project.frontendSourceCodeLink) {
-        leftCol.push(createParagraph([
+        rightCol.push(createParagraph([
           createText("🔗 Frontend Source Code: ", { bold: true }),
           {
             type: "text",
@@ -252,7 +243,7 @@ async function updateNotion(data) {
       }
 
       if (project.backendSourceCodeLink) {
-        leftCol.push(createParagraph([
+        rightCol.push(createParagraph([
           createText("🔗 Backend Source Code: ", { bold: true }),
           {
             type: "text",
@@ -266,7 +257,7 @@ async function updateNotion(data) {
       }
 
       if (project.projectLink) {
-        leftCol.push(createParagraph([
+        rightCol.push(createParagraph([
           createText("🔗 Project Link: ", { bold: true }),
           {
             type: "text",
@@ -279,16 +270,17 @@ async function updateNotion(data) {
         ]));
       }
 
-      const rightCol = [];
+      // Add a divider between links and description
+      rightCol.push({ object: "block", type: "divider", divider: {} });
 
       // Description lines
-      project.notion_description?.split("\n").forEach(line => {
+      project.description?.split("\n").forEach(line => {
         if (line.trim()) {
           rightCol.push({
             object: "block",
             type: "bulleted_list_item",
             bulleted_list_item: {
-              rich_text: [createText(line.trim(), { bold: true })]  // Make text bold for larger appearance
+              rich_text: [createText(line.trim(), { bold: true })]
             }
           });
         }
@@ -304,7 +296,7 @@ async function updateNotion(data) {
         });
       }
 
-      // Use column layout for the project (not inside toggle)
+      // Use column layout with minimal left content to force wider right column
       blocks.push({
         object: "block",
         type: "column_list",
@@ -330,27 +322,113 @@ async function updateNotion(data) {
     blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } }); // spacer
   }
 
+  if (data.experiences) {
+    blocks.push(createHeading("📌 Experience", 2));
+    blocks.push({ object: "block", type: "divider", divider: {} });
+
+    for (const exp of Object.values(data.experiences)) {
+      if (exp.isDeleted) continue;
+
+      // Create a MINIMAL left column with just job title and employer
+      const leftCol = [
+        createParagraph([
+          createText(`${exp.designation} @ ${exp.employer}`, { bold: true })
+        ])
+      ];
+
+      // Move location, period, achievements, and techs to the right column
+      const rightCol = [
+        createParagraph([
+          createText(exp.location, { color: "gray", bold: true })
+        ]),
+        createParagraph([
+          createText(exp.period, { italic: true, bold: true })
+        ])
+      ];
+
+      // Add a divider between basic info and achievements
+      rightCol.push({ object: "block", type: "divider", divider: {} });
+
+      if (exp.achievements) {
+        exp.achievements.split("\n").forEach(line => {
+          const trimmed = line.trim();
+          if (trimmed) {
+            rightCol.push({
+              object: "block",
+              type: "bulleted_list_item",
+              bulleted_list_item: {
+                rich_text: [createText(trimmed.replace(/^➣/, "").trim(), { bold: true })]
+              }
+            });
+          }
+        });
+      }
+
+      if (exp.techs) {
+        rightCol.push(createParagraph([
+          createText(`🛠 Technologies: ${exp.techs}`, { italic: true, bold: true })
+        ]));
+      }
+
+      // Use column layout with minimal left content to force wider right column
+      blocks.push({
+        object: "block",
+        type: "column_list",
+        column_list: {
+          children: [
+            {
+              object: "block",
+              type: "column",
+              column: { children: leftCol }
+            },
+            {
+              object: "block",
+              type: "column",
+              column: { children: rightCol }
+            }
+          ]
+        }
+      });
+
+      blocks.push({ object: "block", type: "divider", divider: {} });
+    }
+
+    blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
+  }
+
   if (data.education) {
     blocks.push(createHeading("🎓 Education", 2));
     blocks.push({ object: "block", type: "divider", divider: {} });
 
+    // MINIMAL left column with just school name
     const leftCol = [
       createParagraph([
         createText(data.education.school, { bold: true })
-      ]),
+      ])
+    ];
+
+    // Move duration and majors to the right column
+    const rightCol = [
       createParagraph([
         createText(data.education.duration, { italic: true, bold: true })
       ])
     ];
 
-    const rightCol = data.education.majors.map(subject => ({
-      object: "block",
-      type: "bulleted_list_item",
-      bulleted_list_item: {
-        rich_text: [createText(subject, { bold: true })]  // Make text bold for larger appearance
-      }
-    }));
+    // Add a divider between duration and majors
+    rightCol.push({ object: "block", type: "divider", divider: {} });
 
+    // Add all majors to right column
+    data.education.majors.forEach(subject => {
+      rightCol.push({
+        object: "block",
+        type: "bulleted_list_item",
+        bulleted_list_item: {
+          rich_text: [createText(subject, { bold: true })]
+        }
+      });
+    });
+
+    // Use column layout with minimal left content to force wider right column
     blocks.push({
       object: "block",
       type: "column_list",
