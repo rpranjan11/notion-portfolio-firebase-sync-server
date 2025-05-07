@@ -266,13 +266,16 @@ async function updateNotion(data) {
       // CHANGE 1: Move more content to the left column, only achievements on the right
       const leftCol = [
         createParagraph([
-          createText(`${exp.designation} @ ${exp.employer}`, { bold: true })
+          createText(`${exp.designation} @ ${exp.employer}`, { color: "blue", bold: true })
         ]),
         createParagraph([
           createText(exp.location, { color: "gray", bold: true })
         ]),
         createParagraph([
           createText(exp.period, { italic: true, bold: true })
+        ]),
+        createParagraph([
+          createText(`🛠 Technologies: ${exp.techs}`, { italic: true, bold: true })
         ])
       ];
 
@@ -329,14 +332,14 @@ async function updateNotion(data) {
       // CHANGE 2: Move more content to the left column, leave only description and techs on the right
       const leftCol = [
         createParagraph([
-          createText(`${project.title}`, { bold: true })
+          createText(`${project.title}`, { color: "blue", bold: true })
         ])
       ];
 
       // Add date to left column
       if (project.publishedOn) {
         leftCol.push(createParagraph([
-          createText(project.publishedOn, { italic: true, bold: true })
+          createText(project.publishedOn, { color: "gray", italic: true, bold: true })
         ]));
       }
 
