@@ -255,6 +255,27 @@ async function updateNotion(data) {
     blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
   }
 
+  if (data.bio && data.bio.position && data.bio.notion_description) {
+    blocks.push(createHeading(`💁‍♂️ ${data.bio.position}`, 2));
+    blocks.push({ object: "block", type: "divider", divider: {} });
+
+    // Split the notion_description by \n and create bullet points
+    const descriptionLines = data.bio.notion_description.split('\n');
+    for (const line of descriptionLines) {
+      if (line.trim()) {
+        blocks.push({
+          object: "block",
+          type: "bulleted_list_item",
+          bulleted_list_item: {
+            rich_text: [createText(line.trim(), { bold: true })]
+          }
+        });
+      }
+    }
+
+    blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
+  }
+
   if (data.experiences) {
     blocks.push(createHeading("📌 Experience", 2));
     blocks.push({ object: "block", type: "divider", divider: {} });
