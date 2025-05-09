@@ -171,8 +171,7 @@ async function updateNotion(data) {
 
       // For each stack category, create a bold heading and list the items in a paragraph (not bullet)
       if (data.stacks["Back-End"]) {
-
-        contactItems.push(createBullet([
+        rightCol.push(createBullet([
           createText("Back-End :: ", { bold: true }),
           createText(data.stacks["Back-End"].join(", "))
         ]));
