@@ -251,7 +251,8 @@ async function updateNotion(data) {
       }
     });
 
-    // Add a spacer after the bio/contact/stacks section
+    // Add a divider and spacer after the bio/contact/stacks section
+    blocks.push({ object: "block", type: "divider", divider: {} });
     blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: [] } });
   }
 
